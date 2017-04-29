@@ -62,35 +62,33 @@ def medianImage(images, start_time):
         status(i, x, start_time)
     return medImg
 
-def transform_image_to_base_image(img1, base):
+def transform_image_to_base_image(img1, base): #michal2229
     MIN_MATCH_COUNT = 20
-    # Initiate ORB detector
     orb = cv2.ORB()
-    # find the keypoints and descriptors with orb
     kp1, des1 = orb.detectAndCompute(img1,None)
     kp2, des2 = orb.detectAndCompute(base,None)
-    # initialize matcher
+
     bfm = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bfm.match(des1, des2)
     matches = sorted(matches, key = lambda x:x.distance)
-    # filtering matches
+
     good = matches[0:len(matches)/2]
-    # getting source & destination points
+
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-    # finding homography
+
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
     matchesMask = mask.ravel().tolist()
-    #set shape and create array for points
+
     h,w,b = img1.shape
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-    # warping perspective
+
     orient = np.zeros([img1.shape[0], img1.shape[1], 3], dtype=np.float32)
     for i in range(orient.shape[0]):
         for j in range(orient.shape[1]):
             orient[i, j] = WHITE
     orient = cv2.warpPerspective(orient, M, (w, h))
-    #get warped image
+
     dst = cv2.warpPerspective(img1, M, (w, h))
 
     return dst, orient
@@ -197,6 +195,7 @@ if __name__ == "__main__":
     cv2.imwrite(os.path.join(ITERATIONS_FOLDER, 'masked' + OUTPUT_NAME), maskedFiltered)
     print ("Saved!\n")
 
+# TRIM IMAGE
     print ("Trimming filtered image...")
     trimmed = trim(maskedFiltered)
     print ("Trimmed!\n")
@@ -204,6 +203,7 @@ if __name__ == "__main__":
     cv2.imwrite(os.path.join(ITERATIONS_FOLDER, 'trimmed' + OUTPUT_NAME), trimmed)
     print ("Saved!")
 
+# CROP UNEVEN EDGES OUT
     print ("Cropping top of photo...")
     toprow = 0
     crop = 0
